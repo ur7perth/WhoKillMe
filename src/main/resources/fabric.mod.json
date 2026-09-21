@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "whokillme",
+  "version": "${version}",
+  "name": "WhoKillMe?",
+  "description": "Track who killed you and how many times you killed your rivals.",
+  "authors": ["abo9kr"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.whokillme.WhoKillMeClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
