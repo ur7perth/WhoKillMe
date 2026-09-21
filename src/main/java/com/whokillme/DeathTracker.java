@@ -76,7 +76,6 @@ public final class DeathTracker {
         candidates.add(me);
         candidates.addAll(onlineNames());
         candidates.addAll(KNOWN);
-        candidates.addAll(d.tracked);
         for (WhoKillMeData.Entry e : d.stats.values()) {
             if (e != null && e.name != null && !e.name.isEmpty()) candidates.add(e.name);
         }
