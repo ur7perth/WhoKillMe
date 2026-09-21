@@ -7,9 +7,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -22,8 +20,6 @@ public class WhoKillMeData {
     }
 
     public Map<String, Entry> stats = new LinkedHashMap<>();
-    public List<String> tracked = new ArrayList<>();
-    public String selected = "";
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static WhoKillMeData instance = new WhoKillMeData();
@@ -44,8 +40,6 @@ public class WhoKillMeData {
             WhoKillMeData loaded = GSON.fromJson(json, WhoKillMeData.class);
             if (loaded != null) {
                 if (loaded.stats == null) loaded.stats = new LinkedHashMap<>();
-                if (loaded.tracked == null) loaded.tracked = new ArrayList<>();
-                if (loaded.selected == null) loaded.selected = "";
                 instance = loaded;
             }
         } catch (Exception e) {
@@ -78,26 +72,6 @@ public class WhoKillMeData {
             stats.put(key(name), e);
         }
         return e;
-    }
-
-    public boolean isTracked(String name) {
-        for (String t : tracked) {
-            if (t.equalsIgnoreCase(name)) return true;
-        }
-        return false;
-    }
-
-    public void select(String name) {
-        entry(name);
-        if (!isTracked(name)) tracked.add(name);
-        selected = name;
-        save();
-    }
-
-    public void untrack(String name) {
-        tracked.removeIf(t -> t.equalsIgnoreCase(name));
-        if (selected.equalsIgnoreCase(name)) selected = "";
-        save();
     }
 
     public void reset(String name) {
