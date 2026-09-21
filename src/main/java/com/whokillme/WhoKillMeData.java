@@ -1,4 +1,4 @@
-Enterpackage com.whokillme;
+package com.whokillme;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
