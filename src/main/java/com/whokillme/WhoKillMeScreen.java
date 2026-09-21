@@ -30,10 +30,10 @@ public class WhoKillMeScreen extends Screen {
     private ButtonWidget prev;
     private ButtonWidget next;
     private ButtonWidget reset;
-    private ButtonWidget untrack;
     private final List<ButtonWidget> rows = new ArrayList<>();
     private List<String> filtered = new ArrayList<>();
     private String query = "";
+    private String selected = null;
     private int page = 0;
     private int px;
     private int py;
@@ -73,17 +73,11 @@ public class WhoKillMeScreen extends Screen {
         addDrawableChild(next);
 
         reset = ButtonWidget.builder(Text.literal("Reset"), b -> {
-            WhoKillMeData d = WhoKillMeData.get();
-            if (!d.selected.isEmpty()) d.reset(d.selected);
+            if (selected != null) {
+                WhoKillMeData.get().reset(selected);
+            }
         }).dimensions(px + 178, py + 120, 150, 20).build();
         addDrawableChild(reset);
-
-        untrack = ButtonWidget.builder(Text.literal("Remove from list"), b -> {
-            WhoKillMeData d = WhoKillMeData.get();
-            if (!d.selected.isEmpty()) d.untrack(d.selected);
-            rebuild();
-        }).dimensions(px + 178, py + 146, 150, 20).build();
-        addDrawableChild(untrack);
 
         rebuild();
     }
@@ -115,7 +109,6 @@ public class WhoKillMeScreen extends Screen {
         }
         rows.clear();
 
-        WhoKillMeData d = WhoKillMeData.get();
         filtered = names();
 
         int pages = Math.max(1, (filtered.size() + PER_PAGE - 1) / PER_PAGE);
@@ -124,7 +117,8 @@ public class WhoKillMeScreen extends Screen {
 
         for (int i = 0; i < PER_PAGE && start + i < filtered.size(); i++) {
             String n = filtered.get(start + i);
-            Text label = Text.literal(n).formatted(d.isTracked(n) ? Formatting.GREEN : Formatting.WHITE);
+            boolean isSelected = selected != null && selected.equalsIgnoreCase(n);
+            Text label = Text.literal(n).formatted(isSelected ? Formatting.GREEN : Formatting.WHITE);
             ButtonWidget b = ButtonWidget.builder(label, btn -> choose(n))
                     .dimensions(px + 12, py + 60 + i * 22, 150, 20)
                     .build();
@@ -134,9 +128,8 @@ public class WhoKillMeScreen extends Screen {
 
         prev.active = page > 0;
         next.active = page < pages - 1;
-        boolean has = !d.selected.isEmpty();
-        reset.active = has;
-        untrack.active = has;
+        reset.visible = selected != null;
+        reset.active = selected != null;
     }
 
     private void choose(String name) {
@@ -147,7 +140,13 @@ public class WhoKillMeScreen extends Screen {
                 break;
             }
         }
-        WhoKillMeData.get().select(resolved);
+        if (selected != null && selected.equalsIgnoreCase(resolved)) {
+            selected = null;
+        } else {
+            selected = resolved;
+            WhoKillMeData.get().entry(resolved);
+            WhoKillMeData.save();
+        }
         rebuild();
     }
 
@@ -192,21 +191,20 @@ public class WhoKillMeScreen extends Screen {
             ctx.drawTextWithShadow(textRenderer, "No players found", px + 12, py + 66, MUTED);
         }
 
-        WhoKillMeData d = WhoKillMeData.get();
         int rx = px + 178;
+        ctx.drawTextWithShadow(textRenderer, "Score", rx, py + 24, MUTED);
 
-        ctx.drawTextWithShadow(textRenderer, "Selected player", rx, py + 24, MUTED);
-
-        if (d.selected.isEmpty()) {
-            ctx.drawTextWithShadow(textRenderer, "Pick a player from the list", rx, py + 40, MUTED);
+        if (selected == null) {
+            ctx.drawTextWithShadow(textRenderer, "Click a player name", rx, py + 40, MUTED);
+            ctx.drawTextWithShadow(textRenderer, "to see the score", rx, py + 52, MUTED);
             return;
         }
 
-        WhoKillMeData.Entry e = d.find(d.selected);
+        WhoKillMeData.Entry e = WhoKillMeData.get().find(selected);
         int kills = e == null ? 0 : e.iKilled;
         int deaths = e == null ? 0 : e.killedMe;
 
-        ctx.drawTextWithShadow(textRenderer, d.selected, rx, py + 38, TEXT);
+        ctx.drawTextWithShadow(textRenderer, selected, rx, py + 38, TEXT);
 
         String ks = String.valueOf(kills);
         String sep = " - ";
@@ -227,5 +225,8 @@ public class WhoKillMeScreen extends Screen {
 
         ctx.drawTextWithShadow(textRenderer, "You killed them: " + kills, rx, py + 88, GREEN);
         ctx.drawTextWithShadow(textRenderer, "They killed you: " + deaths, rx, py + 100, RED);
+
+        ctx.drawTextWithShadow(textRenderer, "Click the name again", rx, py + 150, MUTED);
+        ctx.drawTextWithShadow(textRenderer, "to unselect", rx, py + 162, MUTED);
     }
 }
